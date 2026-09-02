@@ -245,10 +245,10 @@ function renderTable(moduleName, headers, rows) {
 }
 
 /**
- * Opens the modal in "Add" mode.
+ * Opens the modal in "Add" mode with smart input generation.
  */
 function openAddModal(moduleName) {
-  editModeIndex = -1; // Set to Add mode
+  editModeIndex = -1; 
   document.getElementById('universalModalTitle').innerText = `Add New ${moduleName} Record`;
   document.getElementById('modalHeader').className = 'modal-header bg-success text-white';
   
@@ -256,25 +256,52 @@ function openAddModal(moduleName) {
   formFields.innerHTML = '';
   
   currentHeaders.forEach((header, i) => {
-    // Auto-generate standard IDs if applicable
+    const hUpper = header.toUpperCase();
     let autoValue = '';
     let isReadOnly = false;
-    if (header.toUpperCase().includes('ID') && !header.toUpperCase().includes('EMAIL')) {
+
+    // Auto-generate Standardized ID
+    if (hUpper.includes('ID') && !hUpper.includes('EMAIL')) {
       autoValue = moduleName.substring(0, 3).toUpperCase() + new Date().getTime();
       isReadOnly = true;
     }
+    // Unlock Company ID in Drives so it can be overwritten by autocomplete
+    if (currentModule === 'Drives' && hUpper === 'COMPANY ID') {
+      isReadOnly = false; 
+      autoValue = ''; 
+    }
+
+    // Generate Dynamic Input Types
+    let inputHtml = '';
+    if (hUpper.includes('BRANCH')) {
+      inputHtml = `<select class="form-select modal-input" data-header="${header}" id="input_col_${i}"><option value="">Select Branch</option><option value="All">All Branches</option><option value="Computer">Computer</option><option value="IT">IT</option><option value="Mechanical">Mechanical</option></select>`;
+    } else if (hUpper.includes('SEMESTER') || hUpper.includes('SEM ')) {
+      inputHtml = `<input type="number" step="0.01" class="form-control modal-input" data-header="${header}" id="input_col_${i}">`;
+    } else {
+      inputHtml = `<input type="text" class="form-control modal-input" data-header="${header}" id="input_col_${i}" value="${autoValue}" ${isReadOnly ? 'readonly bg-light' : ''} autocomplete="off" ${hUpper.includes('NAME') ? 'placeholder="Type to search..."' : ''}>`;
+    }
+    
+    // Inject Autocomplete Suggestion Boxes
+    let suggestionBox = '';
+    if (hUpper === 'NAME OF THE COMPANY') {
+      suggestionBox = `<div id="companySuggestions" class="list-group position-absolute w-100 shadow z-highest" style="display: none; max-height: 200px; overflow-y: auto; margin-top: 2px;"></div>`;
+    } else if (hUpper === 'NAME OF STUDENT') {
+      suggestionBox = `<div id="studentSuggestions" class="list-group position-absolute w-100 shadow z-highest" style="display: none; max-height: 200px; overflow-y: auto; margin-top: 2px;"></div>`;
+    }
 
     formFields.innerHTML += `
-      <div class="col-md-6">
+      <div class="col-md-6 position-relative">
         <label class="form-label fw-bold text-muted small mb-1">${header}</label>
-        <input type="text" class="form-control modal-input" id="input_col_${i}" value="${autoValue}" ${isReadOnly ? 'readonly bg-light' : ''}>
+        ${inputHtml}
+        ${suggestionBox}
       </div>
     `;
   });
   
+  // Attach API listeners
+  setTimeout(attachAutocompleteEngine, 200);
   new bootstrap.Modal(document.getElementById('universalModal')).show();
 }
-
 /**
  * Opens the modal in "Edit" mode and populates existing data.
  */
