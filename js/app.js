@@ -467,3 +467,69 @@ async function manageDrivePanel(driveId) {
 
   document.getElementById('advancedModalBody').innerHTML = html;
 }
+
+/**
+ * Attaches real-time search events to relational inputs.
+ */
+function attachAutocompleteEngine() {
+  const inputs = document.querySelectorAll('.modal-input');
+  
+  inputs.forEach(input => {
+    const header = input.getAttribute('data-header').toUpperCase();
+    
+    if (header === 'NAME OF THE COMPANY' || header === 'NAME OF STUDENT') {
+      const type = header === 'NAME OF THE COMPANY' ? 'COMPANY' : 'STUDENT';
+      const suggestionBox = document.getElementById(type === 'COMPANY' ? 'companySuggestions' : 'studentSuggestions');
+      
+      input.addEventListener('input', async function() {
+        const term = this.value.trim();
+        if (term.length < 2) {
+          suggestionBox.style.display = 'none';
+          return;
+        }
+        
+        suggestionBox.innerHTML = '<div class="list-group-item text-muted small">Searching database...</div>';
+        suggestionBox.style.display = 'block';
+        
+        // Fetch matches from API without freezing the UI
+        const data = await fetchAPI('searchData', { type: type, term: term });
+        
+        if (data && data.length > 0) {
+          let html = '';
+          data.forEach(item => {
+            html += `<a href="#" class="list-group-item list-group-item-action auto-select" data-id="${item.id}" data-name="${item.name}">
+                      <strong>${item.name}</strong> <small class="text-muted">(${item.id})</small>
+                     </a>`;
+          });
+          suggestionBox.innerHTML = html;
+          
+          // Apply data when clicked
+          document.querySelectorAll('.auto-select').forEach(el => {
+            el.addEventListener('click', function(e) {
+              e.preventDefault();
+              input.value = this.dataset.name;
+              
+              // Automatically fill the corresponding ID field
+              const targetIdHeader = type === 'COMPANY' ? 'COMPANY ID' : 'GR NO.';
+              const idInput = Array.from(inputs).find(i => i.getAttribute('data-header').toUpperCase() === targetIdHeader);
+              if (idInput) {
+                idInput.value = this.dataset.id;
+                idInput.classList.add('bg-success', 'text-white', 'bg-opacity-25');
+                setTimeout(() => idInput.classList.remove('bg-success', 'text-white', 'bg-opacity-25'), 800);
+              }
+              
+              suggestionBox.style.display = 'none';
+            });
+          });
+        } else {
+          suggestionBox.innerHTML = `<div class="list-group-item text-muted small text-danger">No ${type.toLowerCase()} found.</div>`;
+        }
+      });
+
+      // Hide suggestions when clicking outside
+      document.addEventListener('click', e => {
+        if (e.target !== input && suggestionBox) suggestionBox.style.display = 'none';
+      });
+    }
+  });
+}
