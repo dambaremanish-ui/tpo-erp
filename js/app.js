@@ -346,3 +346,97 @@ async function saveRecord() {
   btn.disabled = false;
   btn.innerText = 'Save';
 }
+
+/**
+ * Fetches and renders the Student 360 Profile.
+ */
+async function view360Profile(grNo) {
+  document.getElementById('advancedModalTitle').innerHTML = `<i class="bi bi-person-badge me-2"></i>360° Student Profile`;
+  document.getElementById('advancedModalBody').innerHTML = `<div class="text-center my-5"><div class="spinner-border text-primary"></div></div>`;
+  new bootstrap.Modal(document.getElementById('advancedModal')).show();
+
+  const data = await fetchAPI('getStudent360', { grNo: grNo });
+  if (!data) return; // Error handled by fetchAPI
+
+  const s = data.profile;
+  const apps = data.applications;
+
+  let html = `
+    <div class="row mb-4">
+      <div class="col-md-3 text-center">
+        <img src="${s.data[12] || 'https://via.placeholder.com/150'}" class="img-fluid rounded-circle border shadow-sm mb-3" style="width:150px; height:150px; object-fit:cover;">
+        <h5 class="fw-bold">${s.data[3] || ''} ${s.data[4] || ''}</h5>
+        <span class="badge bg-primary fs-6">${s.data[0] || 'N/A'}</span>
+      </div>
+      <div class="col-md-9">
+        <div class="card shadow-sm border-0"><div class="card-body">
+          <h6 class="fw-bold border-bottom pb-2">Academic Overview</h6>
+          <div class="row mt-3">
+            <div class="col-sm-4"><p class="text-muted mb-0">Branch</p><strong>${s.data[1] || '-'}</strong></div>
+            <div class="col-sm-4"><p class="text-muted mb-0">CGPA</p><strong>${s.data[10] || '-'}</strong></div>
+            <div class="col-sm-4"><p class="text-muted mb-0">Mobile</p><strong>${s.data[6] || '-'}</strong></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+    
+    <h6 class="fw-bold mt-4 mb-3"><i class="bi bi-building-check me-2"></i>Drive Applications</h6>
+  `;
+
+  if (apps.length > 0) {
+    html += `<div class="table-responsive"><table class="table table-sm table-bordered bg-white small">
+      <thead class="table-light"><tr><th>Company</th><th>Role</th><th>Applied On</th><th>Drive Status</th></tr></thead><tbody>`;
+    apps.forEach(app => {
+      const badge = app.status.toUpperCase() === 'CLOSED' ? 'bg-secondary' : 'bg-success';
+      html += `<tr><td class="fw-bold">${app.company}</td><td>${app.role}</td><td>${app.appliedOn}</td><td><span class="badge ${badge}">${app.status}</span></td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  } else {
+    html += `<div class="alert alert-light text-muted border mb-4">No drive applications found.</div>`;
+  }
+
+  document.getElementById('advancedModalBody').innerHTML = html;
+}
+
+/**
+ * Fetches and renders the Drive Management Panel.
+ */
+async function manageDrivePanel(driveId) {
+  document.getElementById('advancedModalTitle').innerHTML = `<i class="bi bi-kanban me-2"></i>Drive Management Panel`;
+  document.getElementById('advancedModalBody').innerHTML = `<div class="text-center my-5"><div class="spinner-border text-primary"></div></div>`;
+  new bootstrap.Modal(document.getElementById('advancedModal')).show();
+
+  const data = await fetchAPI('getDriveManagementData', { driveId: driveId });
+  if (!data) return;
+
+  const d = data.drive;
+  let html = `
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+      <div class="card-body">
+        <h4 class="fw-bold text-primary mb-0">${d[2]}</h4>
+        <p class="text-muted mb-0">${d[6]} | Pkg: ${d[7]}</p>
+      </div>
+    </div>
+    <h6 class="fw-bold mb-3"><i class="bi bi-people me-2"></i>Applicant Shortlisting (${data.applicants.length} Total)</h6>
+  `;
+
+  if (data.applicants.length > 0) {
+    html += `<div class="table-responsive"><table class="table table-hover table-bordered bg-white align-middle small">
+      <thead class="table-dark"><tr><th>GR No</th><th>Student Name</th><th>Branch</th><th>CGPA</th><th>Status</th></tr></thead><tbody>`;
+    
+    data.applicants.forEach(app => {
+      html += `<tr>
+        <td class="fw-bold">${app.grNo}</td>
+        <td>${app.name}<br><small class="text-muted">${app.mobile}</small></td>
+        <td>${app.branch}</td>
+        <td>${app.cgpa}</td>
+        <td><span class="badge bg-info">${app.status}</span></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  } else {
+    html += `<div class="alert alert-secondary">No students have applied for this drive yet.</div>`;
+  }
+
+  document.getElementById('advancedModalBody').innerHTML = html;
+}
