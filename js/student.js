@@ -102,7 +102,7 @@ async function loadPlacementDrives() {
             <div class="card-body">
               <h6 class="fw-bold">${d.company}</h6>
               <p class="text-muted small mb-2">${d.designation}</p>
-              ${d.isApplied ? `<button class="btn btn-sm btn-outline-success w-100" disabled>Applied</button>` : `<button class="btn btn-sm btn-primary w-100" onclick="alert('Smart Apply Logic Pending')">Apply Now</button>`}
+              ${d.isApplied ? `<button class="btn btn-sm btn-outline-success w-100" disabled>Applied</button>` : `<button class="btn btn-sm btn-primary w-100" onclick="handleSmartApplication('${d.driveId}', '${d.regLink}', '${encodeURIComponent(d.formSchema || '')}')">Apply Now</button>`}
             </div>
           </div>
         </div>
