@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employer Portal | TPO ATS</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style> body { background-color: #f8f9fa; } .hidden { display: none !important; } .z-highest { z-index: 9999; } </style>
+</head>
+<body class="py-5">
+
+  <!-- Global Loader -->
+  <div id="global-loader" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 z-highest d-flex justify-content-center align-items-center">
+    <div class="spinner-border text-primary"></div>
+  </div>
+
+  <div class="container" id="app-root">
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card shadow border-0 mt-5">
+          <div class="card-body p-5">
+            <div class="text-center mb-4">
+              <h3 class="fw-bold text-primary">Employer Portal</h3>
+              <p class="text-muted">Secure Applicant Tracking System</p>
+            </div>
+            <form id="employerLoginForm">
+              <input type="text" id="loginDriveId" class="form-control mb-3" placeholder="Drive ID (e.g. DRI123...)" required>
+              <input type="password" id="loginCompanyId" class="form-control mb-4" placeholder="Company ID (Access Key)" required>
+              <button type="submit" class="btn btn-primary w-100 fw-bold">Access Drive Data</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView" class="hidden">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom pb-3 pt-4 d-flex justify-content-between align-items-center">
+          <div>
+            <h4 class="fw-bold text-primary mb-0" id="empCompanyName">Company Name</h4>
+            <p class="text-muted mb-0">Drive Profile: <strong id="empRole">Role</strong></p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-success btn-sm fw-bold" onclick="exportEmployerCSV()">
+              <i class="bi bi-file-earmark-excel me-1"></i>Export CV Data
+            </button>
+            <button onclick="employerLogout()" class="btn btn-outline-danger btn-sm fw-bold">Secure Logout</button>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th class="ps-4">Candidate Name</th>
+                  <th>Branch</th>
+                  <th>CGPA</th>
+                  <th>Contact Email</th>
+                  <th>Status</th>
+                  <th class="text-end pe-4">Document</th>
+                </tr>
+              </thead>
+              <tbody id="applicantList"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/employer.js"></script>
+</body>
+</html>
