@@ -101,3 +101,81 @@ async function loadPlacementDrives() {
     container.innerHTML = html;
   }
 }
+
+let currentActiveOTP = null;
+let rawProfileHeaders = [];
+let rawProfileData = [];
+
+/**
+ * Requests an OTP from the backend to unlock editing.
+ */
+async function requestEditOTP() {
+  const data = await fetchAPI('requestProfileEditOTP', { grNo: activeStudent.grNo });
+  
+  if (data) {
+    const result = await Swal.fire({
+      title: 'Enter Edit Code',
+      text: 'An OTP has been sent to your registered college email.',
+      input: 'text',
+      inputAttributes: { autocapitalize: 'off' },
+      showCancelButton: true,
+      confirmButtonText: 'Unlock Profile'
+    });
+
+    if (result.isConfirmed && result.value) {
+      currentActiveOTP = result.value;
+      renderEditableProfile();
+    }
+  }
+}
+
+/**
+ * Transforms the static profile UI into editable fields.
+ */
+function renderEditableProfile() {
+  const container = document.getElementById('profileDataContainer');
+  let formHtml = '<div class="row g-3">';
+  
+  rawProfileHeaders.forEach((h, i) => {
+    const hUpper = h.toUpperCase();
+    if (!hUpper.includes('PASSKEY') && !hUpper.includes('URL') && !hUpper.includes('OTP')) {
+      const isReadOnly = (hUpper === 'GR NO.');
+      formHtml += `
+        <div class="col-md-4">
+          <label class="text-muted small fw-bold">${h}</label>
+          <input type="text" class="form-control edit-profile-input" data-header="${h}" value="${rawProfileData[i] || ''}" ${isReadOnly ? 'disabled bg-light' : ''}>
+        </div>`;
+    }
+  });
+  
+  formHtml += `
+    <div class="col-12 mt-4 text-end border-top pt-3">
+      <button class="btn btn-secondary me-2" onclick="loadStudentProfile()">Cancel</button>
+      <button class="btn btn-success fw-bold" onclick="submitProfileEdits()">Save Changes</button>
+    </div>
+  </div>`;
+  
+  container.innerHTML = formHtml;
+}
+
+/**
+ * Gathers the updated fields and submits the patch to the backend.
+ */
+async function submitProfileEdits() {
+  const updatedData = {};
+  document.querySelectorAll('.edit-profile-input:not([disabled])').forEach(input => {
+    updatedData[input.getAttribute('data-header')] = input.value;
+  });
+
+  const data = await fetchAPI('saveStudentProfile', {
+    grNo: activeStudent.grNo,
+    otp: currentActiveOTP,
+    updatedData: updatedData
+  });
+
+  if (data) {
+    Swal.fire('Success!', 'Your profile has been updated.', 'success');
+    currentActiveOTP = null;
+    loadStudentProfile(); // Resets back to static read-only view
+  }
+}
