@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal | TPO ERP</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+    .z-highest { z-index: 9999; }
+    .hidden { display: none !important; }
+    .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background-color: transparent; border-top: none; border-left: none; border-right: none;}
+  </style>
+</head>
+<body class="py-5">
+
+  <!-- Global Loader -->
+  <div id="global-loader" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 z-highest d-flex justify-content-center align-items-center">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+
+  <div class="container" id="app-root">
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card shadow-sm border-0 mt-5">
+          <div class="card-body p-5">
+            <div class="text-center mb-4">
+              <h3 class="fw-bold text-primary">Student Portal</h3>
+              <p class="text-muted">Login to manage your profile & drives</p>
+            </div>
+            <form id="studentLoginForm">
+              <input type="text" id="loginGrNo" class="form-control mb-3" placeholder="GR Number" required>
+              <input type="password" id="loginPasskey" class="form-control mb-4" placeholder="6-Digit Passkey" required>
+              <button type="submit" class="btn btn-primary w-100 fw-bold mb-4" id="loginBtn">Secure Login</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView" class="hidden">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <h3 class="fw-bold text-primary mb-0">Welcome, <span id="studentName"></span></h3>
+        <button onclick="studentLogout()" class="btn btn-outline-danger btn-sm fw-bold">Logout</button>
+      </div>
+
+      <ul class="nav nav-tabs mb-4 fw-bold" id="portalTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab">My Profile</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#drivesTab" onclick="loadPlacementDrives()">Placement Drives</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#expTab">Internships</button></li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- PROFILE TAB -->
+        <div class="tab-pane fade show active" id="profileTab">
+          <div class="card shadow-sm border-0"><div class="card-body">
+            <div id="profileDataContainer"></div>
+          </div></div>
+        </div>
+        <!-- DRIVES TAB -->
+        <div class="tab-pane fade" id="drivesTab">
+          <div id="drivesContainer" class="row g-3"></div>
+        </div>
+        <!-- EXPERIENCES TAB -->
+        <div class="tab-pane fade" id="expTab">
+          <div class="card shadow-sm border-0"><div class="card-body">
+            <div class="list-group" id="experienceList"></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Reuse the exact same API bridge from the Admin portal -->
+  <script src="js/api.js"></script> 
+  <script src="js/student.js"></script>
+</body>
+</html>
