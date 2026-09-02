@@ -441,9 +441,14 @@ async function manageDrivePanel(driveId) {
   const d = data.drive;
   let html = `
     <div class="card shadow-sm border-0 mb-4 bg-light">
-      <div class="card-body">
-        <h4 class="fw-bold text-primary mb-0">${d[2]}</h4>
-        <p class="text-muted mb-0">${d[6]} | Pkg: ${d[7]}</p>
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="fw-bold text-primary mb-0">${d[2]}</h4>
+          <p class="text-muted mb-0">${d[6]} | Pkg: ${d[7]}</p>
+        </div>
+        <button class="btn btn-sm btn-outline-info" onclick="copyEmployerLink('${driveId}')">
+          <i class="bi bi-link-45deg me-1"></i>Copy Employer Link
+        </button>
       </div>
     </div>
     <h6 class="fw-bold mb-3"><i class="bi bi-people me-2"></i>Applicant Shortlisting (${data.applicants.length} Total)</h6>
@@ -533,5 +538,37 @@ function attachAutocompleteEngine() {
         if (e.target !== input && suggestionBox) suggestionBox.style.display = 'none';
       });
     }
+  });
+}
+
+
+/**
+ * Builds the employer link using the GitHub Pages URL and copies it to the clipboard.
+ */
+function copyEmployerLink(driveId) {
+  // Construct the secure route pointing to the new GitHub-hosted file
+  const employerLink = `${GITHUB_BASE_URL}/employer.html?driveId=${encodeURIComponent(driveId)}`;
+  
+  // Use the modern clipboard API
+  navigator.clipboard.writeText(employerLink).then(() => {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Link Copied to Clipboard!',
+      text: 'Share this GitHub link and the Company ID with the employer.',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+  }).catch(err => {
+    // Fallback if browser blocks clipboard access
+    Swal.fire({
+      title: 'Employer Link',
+      input: 'text',
+      inputValue: employerLink,
+      text: 'Your browser blocked the auto-copy. Please copy it manually below:',
+      icon: 'warning'
+    });
   });
 }
