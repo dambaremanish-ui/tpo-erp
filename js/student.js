@@ -179,3 +179,74 @@ async function submitProfileEdits() {
     loadStudentProfile(); // Resets back to static read-only view
   }
 }
+
+/**
+ * Evaluates the form schema and dictates a 1-click apply or a dynamic modal.
+ */
+function handleSmartApplication(driveId, regLink, encodedSchema) {
+  let schemaStr = decodeURIComponent(encodedSchema);
+  let schema = null;
+  try { if (schemaStr) schema = JSON.parse(schemaStr); } catch(e) {}
+
+  if (!schema || (schema.stdFields.length === 0 && schema.customFields.length === 0)) {
+    // 1-Click Apply Route
+    Swal.fire({
+      title: 'Quick Apply',
+      text: 'Submit your default master profile for this drive?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Apply Now'
+    }).then(res => {
+      if (res.isConfirmed) executeDriveApplication(driveId, regLink, {});
+    });
+    return;
+  }
+
+  // Dynamic Form Route
+  let formHtml = `<div class="text-start">`;
+  schema.stdFields.forEach(f => {
+    if (f.editable) {
+      formHtml += `<label class="fw-bold small text-muted mb-1">${f.name}</label><input type="text" class="form-control mb-3 dynamic-app-input" data-key="${f.name}">`;
+    }
+  });
+
+  if (schema.customFields.length > 0) {
+    formHtml += `<hr><h6 class="fw-bold text-primary mb-3">Extra Requirements</h6>`;
+    schema.customFields.forEach(f => {
+      formHtml += `<label class="fw-bold small text-muted mb-1">${f}</label><input type="text" class="form-control mb-3 dynamic-app-input" data-key="${f}" required>`;
+    });
+  }
+  
+  Swal.fire({
+    title: 'Application Details Required',
+    html: formHtml + `</div>`,
+    showCancelButton: true,
+    confirmButtonText: 'Submit Application',
+    preConfirm: () => {
+      let submissionData = {};
+      document.querySelectorAll('.dynamic-app-input').forEach(input => {
+        submissionData[input.getAttribute('data-key')] = input.value;
+      });
+      return submissionData;
+    }
+  }).then(result => {
+    if (result.isConfirmed) executeDriveApplication(driveId, regLink, result.value);
+  });
+}
+
+/**
+ * Fires the API request to officially record the application.
+ */
+async function executeDriveApplication(driveId, regLink, customDataObj) {
+  const data = await fetchAPI('applyForDrive', {
+    grNo: activeStudent.grNo,
+    driveId: driveId,
+    customDetailsJSON: JSON.stringify(customDataObj)
+  });
+
+  if (data) {
+    Swal.fire('Submitted!', 'Application recorded successfully.', 'success');
+    if (regLink && regLink.startsWith('http')) window.open(regLink, '_blank');
+    loadPlacementDrives(); // Refresh the UI state
+  }
+}
