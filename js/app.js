@@ -7,6 +7,8 @@ let currentHeaders = [];
 let currentTableData = [];
 let editModeIndex = -1; // -1 means 'Add Mode', otherwise it holds the row index for 'Edit Mode'
 
+const GITHUB_BASE_URL = 'https://dambaremanish-ui.github.io/tpo-erp';
+
 /**
  * Initializes the application on page load.
  */
