@@ -189,11 +189,20 @@ function renderTable(moduleName, headers, rows) {
           ${rows.map((row, index) => {
             
             // Generate standard Action Buttons
+            // Generate standard Action Buttons
             let actionButtons = `
               <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${index})" title="Edit">
                 <i class="bi bi-pencil-square"></i>
               </button>
             `;
+
+            // Inject Advanced View Buttons
+            if (moduleName === 'Students') {
+              actionButtons += `<button class="btn btn-sm btn-outline-info me-1" onclick="view360Profile('${row[0]}')" title="360° Profile"><i class="bi bi-person-vcard"></i></button>`;
+            }
+            if (moduleName === 'Drives') {
+              actionButtons += `<button class="btn btn-sm btn-outline-warning me-1" onclick="manageDrivePanel('${row[0]}')" title="Manage Applicants"><i class="bi bi-people-fill"></i></button>`;
+            }
 
             // Format Cells (You can expand this later to render images or links safely)
             let formattedCells = row.map(cell => {
