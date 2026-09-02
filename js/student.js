@@ -46,9 +46,19 @@ async function loadStudentProfile() {
   const container = document.getElementById('profileDataContainer');
   const expContainer = document.getElementById('experienceList');
   
+  // Make sure the Unlock button is visible if returning from Edit Mode
+  const unlockBtn = document.getElementById('unlockProfileBtn');
+  if (unlockBtn) unlockBtn.classList.remove('hidden');
+  
   const data = await fetchAPI('getStudentPortalData', { grNo: activeStudent.grNo });
   
   if (data) {
+    // --- THIS IS THE CACHE LOGIC ---
+    // Save the fetched data to our global variables for later use in Edit Mode
+    rawProfileHeaders = data.profile.headers;
+    rawProfileData = data.profile.data;
+    // -------------------------------
+
     // Render Profile Fields
     let profHtml = '<div class="row g-3">';
     data.profile.headers.forEach((h, i) => {
