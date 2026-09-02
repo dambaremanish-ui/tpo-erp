@@ -1,6 +1,12 @@
 // Global State
 let currentUser = null;
 
+// Data Tracking State
+let currentModule = '';
+let currentHeaders = [];
+let currentTableData = [];
+let editModeIndex = -1; // -1 means 'Add Mode', otherwise it holds the row index for 'Edit Mode'
+
 /**
  * Initializes the application on page load.
  */
@@ -135,7 +141,12 @@ async function loadModule(moduleName) {
   });
 
   if (data) {
-    // Data successfully retrieved, pass to table renderer
+    // Capture state for the modals
+    currentModule = moduleName;
+    currentHeaders = data.headers;
+    currentTableData = data.rows;
+    
+    // Render the table
     renderTable(moduleName, data.headers, data.rows);
   }
 }
@@ -224,13 +235,105 @@ function renderTable(moduleName, headers, rows) {
   });
 }
 
-// Temporary placeholders for Modal Functions (to prevent console errors)
+/**
+ * Opens the modal in "Add" mode.
+ */
 function openAddModal(moduleName) {
-  console.log('Open Add Modal for:', moduleName);
-  Swal.fire('Coming Soon', 'Add functionality will be implemented in Step 5.', 'info');
+  editModeIndex = -1; // Set to Add mode
+  document.getElementById('universalModalTitle').innerText = `Add New ${moduleName} Record`;
+  document.getElementById('modalHeader').className = 'modal-header bg-success text-white';
+  
+  const formFields = document.getElementById('universalFormFields');
+  formFields.innerHTML = '';
+  
+  currentHeaders.forEach((header, i) => {
+    // Auto-generate standard IDs if applicable
+    let autoValue = '';
+    let isReadOnly = false;
+    if (header.toUpperCase().includes('ID') && !header.toUpperCase().includes('EMAIL')) {
+      autoValue = moduleName.substring(0, 3).toUpperCase() + new Date().getTime();
+      isReadOnly = true;
+    }
+
+    formFields.innerHTML += `
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">${header}</label>
+        <input type="text" class="form-control modal-input" id="input_col_${i}" value="${autoValue}" ${isReadOnly ? 'readonly bg-light' : ''}>
+      </div>
+    `;
+  });
+  
+  new bootstrap.Modal(document.getElementById('universalModal')).show();
 }
 
+/**
+ * Opens the modal in "Edit" mode and populates existing data.
+ */
 function openEditModal(rowIndex) {
-  console.log('Open Edit Modal for row:', rowIndex);
-  Swal.fire('Coming Soon', 'Edit functionality will be implemented in Step 5.', 'info');
+  editModeIndex = rowIndex; // Set to Edit mode
+  const rowData = currentTableData[rowIndex];
+  
+  document.getElementById('universalModalTitle').innerText = `Edit ${currentModule} Record`;
+  document.getElementById('modalHeader').className = 'modal-header bg-primary text-white';
+  
+  const formFields = document.getElementById('universalFormFields');
+  formFields.innerHTML = '';
+  
+  currentHeaders.forEach((header, i) => {
+    // Make primary keys (like ID or Timestamp) read-only during edits
+    const isReadOnly = header.toUpperCase().includes('ID') || header.toUpperCase().includes('TIMESTAMP');
+    
+    formFields.innerHTML += `
+      <div class="col-md-6">
+        <label class="form-label fw-bold text-muted small mb-1">${header}</label>
+        <input type="text" class="form-control modal-input" id="input_col_${i}" value="${rowData[i] || ''}" ${isReadOnly ? 'readonly bg-light' : ''}>
+      </div>
+    `;
+  });
+  
+  new bootstrap.Modal(document.getElementById('universalModal')).show();
+}
+
+/**
+ * Gathers form data and pushes it to the backend REST API.
+ */
+async function saveRecord() {
+  const btn = document.getElementById('saveRecordBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+  // Gather data from all generated inputs
+  let payloadData = [];
+  currentHeaders.forEach((_, i) => {
+    payloadData.push(document.getElementById(`input_col_${i}`).value);
+  });
+
+  const isEdit = editModeIndex !== -1;
+  const action = isEdit ? 'updateRecord' : 'addRecord';
+  
+  const payload = {
+    moduleName: currentModule,
+    rowData: payloadData,
+    rowIndex: editModeIndex // Only used if updating
+  };
+
+  const result = await fetchAPI(action, payload);
+
+  if (result) {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Record saved successfully!',
+      showConfirmButton: false,
+      timer: 2000
+    });
+    
+    // Hide modal and refresh the table
+    bootstrap.Modal.getInstance(document.getElementById('universalModal')).hide();
+    loadModule(currentModule);
+  }
+
+  btn.disabled = false;
+  btn.innerText = 'Save';
 }
